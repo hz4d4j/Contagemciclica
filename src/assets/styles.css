@@ -1,0 +1,84 @@
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Nexteer brand header: red background, white text, gray accents */
+:root {
+  --nexteer-red: #c8102e;
+  --nexteer-red-dark: #a00d24;
+  --nexteer-gray: #6c757d;
+}
+
+.navbar-nexteer {
+  --bs-navbar-color: rgba(255, 255, 255, 0.85);
+  --bs-navbar-hover-color: #ffffff;
+  --bs-navbar-active-color: #ffffff;
+  --bs-navbar-brand-color: #ffffff;
+  --bs-navbar-brand-hover-color: #ffffff;
+  --bs-navbar-toggler-border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(180deg, var(--nexteer-red) 0%, var(--nexteer-red-dark) 100%);
+  border-bottom: 3px solid var(--nexteer-gray);
+}
+
+.navbar-nexteer .nav-link {
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.navbar-nexteer .nav-link:hover {
+  border-bottom-color: rgba(255, 255, 255, 0.6);
+}
+
+.navbar-nexteer .nav-link.active {
+  border-bottom-color: #ffffff;
+}
+
+.navbar-nexteer .navbar-toggler-icon {
+  filter: invert(1) grayscale(1) brightness(2);
+}
+
+.btn-nexteer-toggle {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-nexteer-toggle:hover,
+.btn-nexteer-toggle:focus-visible {
+  color: var(--nexteer-red-dark);
+  background-color: #ffffff;
+  border-color: #ffffff;
+}
+
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.2;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.table-scroll {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
