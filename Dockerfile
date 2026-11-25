@@ -24,11 +24,18 @@ COPY server/schema ./schema
 # Frontend static files from build stage
 COPY --from=frontend-build /app/dist-catalyst ./public
 
+# Create non-root user and set ownership
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser \
+    && chown -R appuser:appuser /app
+
 # Environment defaults (override at runtime)
 ENV NODE_ENV=production
 ENV PORT=3001
 
 EXPOSE 3001
+
+# Run as non-root user
+USER appuser
 
 # Express serves /api/* and static files from ./public
 CMD ["node", "src/index.js"]
