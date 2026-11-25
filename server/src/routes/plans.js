@@ -105,9 +105,7 @@ router.post('/plans/rebuild', async (req, res, next) => {
         `(@p${idx*3}, @p${idx*3+1}, @p${idx*3+2})`
       ).join(',');
       const params = chunk.flatMap(r => [r.base_id, r.item_id, r.scheduled_date]);
-      await query(`INSERT INTO count_plans (base_id, item_id, scheduled_date, status) VALUES ${values}`,
-        params.map(v => v));
-      void values;
+      await query(`INSERT INTO count_plans (base_id, item_id, scheduled_date, status) VALUES ${values}`, params);
     }
 
     res.json({ scheduled: scheduleRows.length });

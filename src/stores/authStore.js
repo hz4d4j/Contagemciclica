@@ -14,15 +14,15 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
     // In Catalyst with Easy Auth, the platform handles login.
-    // We call a protected endpoint to get the authenticated identity.
-    // If not authenticated, Easy Auth redirects to Microsoft login.
+    // We call a protected API endpoint to confirm the session is authenticated.
+    // If not authenticated, Easy Auth redirects to Microsoft login automatically.
     loading.value = true
     try {
-      const res = await fetch(`${apiBaseUrl}/health`, { credentials: 'include' })
+      const res = await fetch(`${apiBaseUrl}/api/costs`, { credentials: 'include' })
       if (res.ok) {
-        // Easy Auth injects identity headers; we can't read them from JS,
-        // but a successful response means the user is authenticated.
         user.value = { name: 'Usuário autenticado', source: 'easy-auth' }
+      } else {
+        user.value = null
       }
     } catch {
       user.value = null

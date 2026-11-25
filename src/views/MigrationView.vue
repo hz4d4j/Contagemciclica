@@ -66,7 +66,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { supabase } from '../lib/supabase'
+import { isCatalystMode } from '../lib/appMode'
 import { catalystApi } from '../apis/catalystApi'
 
 const busy = ref(false)
@@ -77,6 +77,7 @@ const migrationResult = ref(null)
 const errorMessage = ref('')
 
 async function fetchAll(table, select) {
+  const { supabase } = await import('../lib/supabase')
   const rows = []
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase.from(table).select(select).range(from, from + 999)

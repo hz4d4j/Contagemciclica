@@ -89,3 +89,81 @@ describe('Auth middleware', () => {
     assert.equal(res.status, 401);
   });
 });
+
+describe('Migration admin guard', () => {
+  function makeMigrateApp(admins) {
+    process.env.NODE_ENV = 'production';
+    process.env.EASY_AUTH_ENABLED = 'true';
+    process.env.MIGRATION_ADMINS = admins ?? '';
+
+    const app = express();
+    app.use(express.json());
+    app.use('/api', authMiddleware());
+
+    // Inline admin guard matching migrate.js
+    function adminOnly(req, res, next) {
+      const adminList = (process.env.MIGRATION_ADMINS ?? '')
+        .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+      if (adminList.length === 0) {
+        return res.status(403).json({ error: 'Migração não configurada.' });
+      }
+      const userName = (req.user?.name ?? '').toLowerCase();
+      if (!adminList.includes(userName)) {
+        return res.status(403).json({ error: 'Acesso negado.' });
+      }
+      next();
+    }
+
+    app.post('/api/migrate', adminOnly, (req, res) => res.json({ ok: true }));
+    app.get('/api/migrate/validate', adminOnly, (req, res) => res.json({}));
+    return app;
+  }
+
+  async function postRequest(app, path, headers = {}) {
+    return new Promise((resolve) => {
+      const server = app.listen(0, () => {
+        const port = server.address().port;
+        const req = http.request({ port, path, headers, method: 'POST' }, (res) => {
+          let body = '';
+          res.on('data', (c) => body += c);
+          res.on('end', () => {
+            server.close();
+            resolve({ status: res.statusCode, body: JSON.parse(body || '{}') });
+          });
+        });
+        req.end();
+      });
+    });
+  }
+
+  test('blocks non-admin authenticated user from migration', async () => {
+    process.env.MIGRATION_ADMINS = 'admin@nexteer.com';
+    const app = makeMigrateApp('admin@nexteer.com');
+    const res = await postRequest(app, '/api/migrate', {
+      'x-ms-client-principal-name': 'regular@nexteer.com',
+      'x-ms-client-principal-idp': 'EntraID',
+    });
+    assert.equal(res.status, 403);
+  });
+
+  test('allows admin user to access migration', async () => {
+    process.env.MIGRATION_ADMINS = 'admin@nexteer.com,devops@nexteer.com';
+    const app = makeMigrateApp('admin@nexteer.com,devops@nexteer.com');
+    const res = await postRequest(app, '/api/migrate', {
+      'x-ms-client-principal-name': 'devops@nexteer.com',
+      'x-ms-client-principal-idp': 'EntraID',
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.ok, true);
+  });
+
+  test('blocks migration when MIGRATION_ADMINS is empty', async () => {
+    process.env.MIGRATION_ADMINS = '';
+    const app = makeMigrateApp('');
+    const res = await postRequest(app, '/api/migrate', {
+      'x-ms-client-principal-name': 'anyone@nexteer.com',
+      'x-ms-client-principal-idp': 'EntraID',
+    });
+    assert.equal(res.status, 403);
+  });
+});

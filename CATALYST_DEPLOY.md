@@ -23,6 +23,7 @@
 | `ENTRA_AUDIENCE` | (clientId da App Registration) | Audience esperada no token (clientId do backend no Entra) |
 | `EASY_AUTH_ENABLED` | `true` | Ativa confiança nos cabeçalhos do Easy Auth do App Service |
 | `WEBSITE_AUTH_ENABLED` | `true` | Alternativa detectada automaticamente pelo App Service |
+| `MIGRATION_ADMINS` | `admin@nexteer.com,devops@nexteer.com` | Lista separada por vírgulas de e-mails autorizados a executar migração. Sem isso, o endpoint retorna 403. |
 | `AUTH_BYPASS` | (não definir em produção) | Apenas para desenvolvimento local |
 
 ## Passos para migração e publicação
@@ -65,8 +66,9 @@
 2. Clicar "Exportar dados" — lê todas as 7 tabelas do Supabase (Bolt)
 3. Clicar "Migrar para Azure SQL" — envia o payload para `/api/migrate`
 4. Validar contagens: o endpoint retorna esperado x atual por tabela
-5. A migração é reexecutável: rodar de novo atualiza registros existentes (MERGE)
+5. A migração é segura (insert-only): registros já existentes no Azure SQL não são sobrescritos
 6. UUIDs são preservados — os IDs do Bolt viram os IDs no Azure SQL
+7. Apenas administradores listados em `MIGRATION_ADMINS` podem executar a migração
 
 ### 7. Validação
 
@@ -84,5 +86,9 @@ A aba "Migração" fica oculta fora do modo Catalyst.
 - **Easy Auth**: cabeçalhos `x-ms-client-principal-*` são confiáveis apenas quando `EASY_AUTH_ENABLED=true`. Fora do App Service, esses cabeçalhos são ignorados.
 - **Bearer token**: quando Easy Auth está inativo (dev/test), o backend valida JWT Entra via JWKS.
 - **Negar por padrão**: qualquer requisição sem autenticação recebe 401.
+- **Migração restrita**: o endpoint `/api/migrate` exige que o usuário esteja na lista `MIGRATION_ADMINS`. Usuários comuns autenticados recebem 403.
+- **Insert-only**: a migração não sobrescreve dados já existentes no Azure SQL. Re-executar é seguro (pula duplicatas).
 - **Sem SQL no navegador**: todas as queries SQL ficam no backend. O frontend chama apenas REST.
 - **Sem modo desenvolvimento em deploy**: `NODE_ENV=production` bloqueia o bypass de auth.
+- **Erros não vazam**: o handler de erros retorna mensagem genérica, não expõe detalhes de SQL.
+- **Anon key isolada**: a chave do Supabase fica em chunk separado, carregado apenas na tela de migração. Não aparece nos bundles principais.

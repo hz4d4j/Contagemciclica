@@ -19,6 +19,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 const apiAuth = authMiddleware();
 app.use('/api', apiAuth);
 
+// Migration routes require admin role (see adminMiddleware in migrate.js)
 app.use('/api/plans', plansRouter);
 app.use('/api/bases', basesRouter);
 app.use('/api/history', historyRouter);
@@ -26,10 +27,10 @@ app.use('/api/costs', costsRouter);
 app.use('/api/position-checks', positionChecksRouter);
 app.use('/api/migrate', migrateRouter);
 
-// Generic error handler
+// Generic error handler — never leak internal details to client
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).json({ error: err.message || 'Erro interno do servidor.' });
+  res.status(500).json({ error: 'Erro interno do servidor.' });
 });
 
 // Deny everything else
