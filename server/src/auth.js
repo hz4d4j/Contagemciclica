@@ -36,6 +36,7 @@ function fromEasyAuthHeaders(req) {
 async function validateJwt(token) {
   const { tenantId, audience } = config.entra;
   if (!tenantId) throw new Error('ENTRA_TENANT_ID não configurado');
+  if (!audience) throw new Error('ENTRA_AUDIENCE não configurado');
   const issuer = `https://sts.windows.net/${tenantId}/`;
   const jwksUri = `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`;
 
@@ -50,7 +51,7 @@ async function validateJwt(token) {
   const claims = jwt.verify(token, key, {
     algorithms: ['RS256'],
     issuer,
-    audience: audience || undefined,
+    audience,
   });
 
   return {

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+dist-catalyst/
+dist-bolt/
+.env
+.env.*
+!.env.example

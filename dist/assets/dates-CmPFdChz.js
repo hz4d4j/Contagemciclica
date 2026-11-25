@@ -1,1 +1,0 @@
-function e(){let e=new Date;return`${e.getFullYear()}-${String(e.getMonth()+1).padStart(2,`0`)}-${String(e.getDate()).padStart(2,`0`)}`}function t(e){if(!e)return`-`;let[t,n,r]=e.split(`-`);return`${r}/${n}/${t}`}export{e as n,t};
