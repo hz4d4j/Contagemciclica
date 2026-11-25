@@ -29,6 +29,13 @@
         >
           {{ theme.dark ? 'Tema claro' : 'Tema escuro' }}
         </button>
+        <span v-if="auth.user" class="navbar-text text-white small ms-3 d-none d-md-inline">{{ auth.user.name }}</span>
+        <button
+          v-if="isCatalystMode"
+          class="btn btn-sm btn-nexteer-toggle ms-2"
+          type="button"
+          @click="auth.logout()"
+        >Sair</button>
       </div>
     </div>
   </nav>
@@ -37,8 +44,11 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import { useThemeStore } from '../stores/themeStore'
+import { useAuthStore } from '../stores/authStore'
+import { isCatalystMode } from '../lib/appMode'
 
 const theme = useThemeStore()
+const auth = useAuthStore()
 
 const links = [
   { to: '/operador', label: 'Painel de contagem cíclica' },
@@ -48,6 +58,7 @@ const links = [
   { to: '/historico', label: 'Histórico' },
   { to: '/custos', label: 'Custos' },
   { to: '/importar', label: 'Importar Excel' },
+  ...(isCatalystMode ? [{ to: '/migracao', label: 'Migração' }] : []),
 ]
 </script>
 

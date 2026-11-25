@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabase'
 import { addMonths, buildSchedule, monthRange, scheduleInputFor } from '../lib/countSchedule'
 import { buildHistoryRows } from '../lib/historyRows'
+import { isCatalystMode } from '../lib/appMode'
+import { catalystApi } from './catalystApi'
 
 const PAGE_SIZE = 1000
 const WRITE_CHUNK = 500
@@ -31,6 +33,7 @@ function todayIso() {
 }
 
 export async function saveImportedBases(parsedBases) {
+  if (isCatalystMode) return catalystApi.saveImportedBases(parsedBases)
   let itemCount = 0
   for (const base of parsedBases) {
     const { data: baseRow, error } = await supabase
@@ -53,6 +56,7 @@ export async function saveImportedBases(parsedBases) {
 }
 
 export async function listPlansInMonth(year, month) {
+  if (isCatalystMode) return catalystApi.listPlansInMonth(year, month)
   const { first, last } = monthRange(year, month)
   return fetchAll((from, to) =>
     supabase
@@ -67,6 +71,7 @@ export async function listPlansInMonth(year, month) {
 }
 
 export async function listPlansOnDate(date) {
+  if (isCatalystMode) return catalystApi.listPlansOnDate(date)
   return fetchAll((from, to) =>
     supabase
       .from('count_plans')
@@ -78,6 +83,7 @@ export async function listPlansOnDate(date) {
 }
 
 export async function rebuildSchedule() {
+  if (isCatalystMode) return rebuildScheduleCatalyst()
   const bases = await fetchAll((from, to) => supabase.from('count_bases').select('id').order('name').range(from, to))
   const costs = await loadItemCosts()
   const abcByPn = new Map(costs.map((cost) => [cost.pn, cost.abc]))
@@ -129,6 +135,7 @@ export async function rebuildSchedule() {
 }
 
 export async function completeItemCount(plan, item, details, operatorName) {
+  if (isCatalystMode) return catalystApi.completeItemCount(plan, item, details, operatorName)
   const countedDate = todayIso()
   const { error: resultError } = await supabase.from('count_results').upsert(
     {
@@ -159,11 +166,13 @@ export async function completeItemCount(plan, item, details, operatorName) {
 }
 
 export async function loadHistoryRows() {
+  if (isCatalystMode) return loadHistoryRowsCatalyst()
   const [completedPlans, importedRows] = await Promise.all([loadCountHistory(), loadImportedHistory()])
   return buildHistoryRows(importedRows, completedPlans)
 }
 
 async function loadCountHistory() {
+  if (isCatalystMode) return catalystApi.loadCountHistory()
   return fetchAll((from, to) =>
     supabase
       .from('count_plans')
@@ -176,6 +185,7 @@ async function loadCountHistory() {
 }
 
 export async function saveHistoryRows(rows) {
+  if (isCatalystMode) return catalystApi.saveHistoryRows(rows)
   for (const part of chunk(rows, WRITE_CHUNK)) {
     const { error } = await supabase.from('count_history').upsert(
       part.map((row) => ({
@@ -200,6 +210,7 @@ export async function saveHistoryRows(rows) {
 }
 
 export async function loadLastHistoryCountDates() {
+  if (isCatalystMode) return catalystApi.loadLastHistoryCountDates()
   const rows = await fetchAll((from, to) =>
     supabase
       .from('count_history')
@@ -216,6 +227,7 @@ export async function loadLastHistoryCountDates() {
 }
 
 async function loadImportedHistory() {
+  if (isCatalystMode) return catalystApi.loadImportedHistory()
   return fetchAll((from, to) =>
     supabase
       .from('count_history')
@@ -227,6 +239,7 @@ async function loadImportedHistory() {
 }
 
 export async function loadItemCosts() {
+  if (isCatalystMode) return catalystApi.loadItemCosts()
   const rows = await fetchAll((from, to) =>
     supabase
       .from('item_costs')
@@ -238,6 +251,7 @@ export async function loadItemCosts() {
 }
 
 export async function loadCompletedResults() {
+  if (isCatalystMode) return loadCompletedResultsCatalyst()
   return fetchAll((from, to) =>
     supabase
       .from('count_results')
@@ -248,6 +262,7 @@ export async function loadCompletedResults() {
 }
 
 export async function updateHistoryRow(row, values) {
+  if (isCatalystMode) return catalystApi.updateHistoryRow(row, values)
   if (row.source === 'imported') {
     const { error } = await supabase
       .from('count_history')
@@ -303,16 +318,19 @@ function positionCheckColumns(check) {
 }
 
 export async function savePositionCheck(check) {
+  if (isCatalystMode) return catalystApi.savePositionCheck(check)
   const { error } = await supabase.from('position_checks').insert(positionCheckColumns(check))
   ensureOk(error)
 }
 
 export async function updatePositionCheck(id, check) {
+  if (isCatalystMode) return catalystApi.updatePositionCheck(id, check)
   const { error } = await supabase.from('position_checks').update(positionCheckColumns(check)).eq('id', id)
   ensureOk(error)
 }
 
 export async function listBaseItems(baseId) {
+  if (isCatalystMode) return catalystApi.listBaseItems(baseId)
   return fetchAll((from, to) =>
     supabase
       .from('count_items')
@@ -324,6 +342,7 @@ export async function listBaseItems(baseId) {
 }
 
 export async function changePendingPlanItem(planId, itemId) {
+  if (isCatalystMode) return catalystApi.changePendingPlanItem(planId, itemId)
   const { data, error } = await supabase
     .from('count_plans')
     .update({ item_id: itemId })
@@ -335,12 +354,14 @@ export async function changePendingPlanItem(planId, itemId) {
 }
 
 export async function listCountItems() {
+  if (isCatalystMode) return catalystApi.listCountItems()
   const { data, error } = await supabase.from('count_items').select('id, sku, description').order('sku')
   ensureOk(error)
   return data
 }
 
 export async function listPositionChecks() {
+  if (isCatalystMode) return catalystApi.listPositionChecks()
   const { data, error } = await supabase
     .from('position_checks')
     .select('id, count_item_id, check_date, operator_name, locations_checked, locations_ok, locations_not_ok, occurrence, action_plan, count_items(sku, description)')
@@ -349,4 +370,43 @@ export async function listPositionChecks() {
     .limit(100)
   ensureOk(error)
   return data
+}
+
+async function rebuildScheduleCatalyst() {
+  const bases = await catalystApi.listBases()
+  const costs = await loadItemCosts()
+  const abcByPn = new Map(costs.map((cost) => [cost.pn, cost.abc]))
+  const lastHistoryDateByPn = await loadLastHistoryCountDates()
+  const allScheduleRows = []
+  for (const base of bases) {
+    const items = await catalystApi.listBaseItems(base.id)
+    const scheduleItems = items.map((item) => scheduleInputFor(item, abcByPn, lastHistoryDateByPn))
+    const schedule = buildSchedule({ items: scheduleItems, startDate: todayIso(), endDate: addMonths(todayIso(), 6), occupied: {} })
+    for (const entry of schedule) {
+      allScheduleRows.push({ base_id: base.id, item_id: entry.item_id, scheduled_date: entry.scheduled_date })
+    }
+  }
+  const result = await catalystApi.rebuildSchedule(allScheduleRows)
+  return result.scheduled
+}
+
+async function loadHistoryRowsCatalyst() {
+  const [completedPlans, importedRows] = await Promise.all([catalystApi.loadCountHistory(), catalystApi.loadImportedHistory()])
+  return buildHistoryRows(importedRows, completedPlans)
+}
+
+async function loadCompletedResultsCatalyst() {
+  const completed = await catalystApi.loadCountHistory()
+  return completed.flatMap((plan) =>
+    (plan.count_results || []).map((r) => ({
+      system_qty: r.system_qty,
+      counted_qty: r.counted_qty,
+      count_plans: {
+        id: plan.id,
+        scheduled_date: plan.scheduled_date,
+        status: 'completed',
+        count_bases: { name: 'Base' },
+      },
+    })),
+  )
 }
