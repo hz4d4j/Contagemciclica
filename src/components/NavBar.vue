@@ -58,7 +58,6 @@ const links = [
   { to: '/historico', label: 'Histórico' },
   { to: '/custos', label: 'Custos' },
   { to: '/importar', label: 'Importar Excel' },
-  ...(isCatalystMode ? [{ to: '/migracao', label: 'Migração' }] : []),
 ]
 </script>
 

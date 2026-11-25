@@ -125,11 +125,4 @@ export const catalystApi = {
     return apiGet('/api/position-checks')
   },
 
-  // Migration
-  async migrateData(payload) {
-    return apiPost('/api/migrate', payload)
-  },
-  async validateMigration() {
-    return apiGet('/api/migrate/validate')
-  },
 }

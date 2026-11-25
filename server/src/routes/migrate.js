@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query } from '../db.js';
+import { query, validateTableName } from '../db.js';
 
 const router = Router();
 
@@ -27,11 +27,8 @@ function adminOnly(req, res, next) {
   next();
 }
 
-// Table name allowlist — never accept user-controlled table names in SQL
-const TABLE_ALLOWLIST = new Set([
-  'count_bases', 'count_items', 'count_plans', 'count_results',
-  'count_history', 'item_costs', 'position_checks',
-]);
+// Table name validation — db.js validateTableName enforces the allowlist
+// so no user-controlled identifier can reach the SQL string.
 
 /**
  * POST /api/migrate
@@ -145,7 +142,7 @@ router.post('/', adminOnly, async (req, res, next) => {
     // Validate counts using allowlist only
     const validations = {};
     for (const [table, inserted] of Object.entries(summary)) {
-      if (!TABLE_ALLOWLIST.has(table)) continue;
+      validateTableName(table);
       const r = await query(`SELECT COUNT(*) AS cnt FROM ${table}`);
       validations[table] = { inserted, totalNow: r.recordset[0].cnt };
     }
@@ -158,7 +155,9 @@ router.post('/', adminOnly, async (req, res, next) => {
 router.get('/validate', adminOnly, async (req, res, next) => {
   try {
     const counts = {};
-    for (const t of TABLE_ALLOWLIST) {
+    for (const t of ['count_bases', 'count_items', 'count_plans', 'count_results',
+                     'count_history', 'item_costs', 'position_checks']) {
+      validateTableName(t);
       const r = await query(`SELECT COUNT(*) AS cnt FROM ${t}`);
       counts[t] = r.recordset[0].cnt;
     }

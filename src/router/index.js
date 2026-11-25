@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isCatalystMode } from '../lib/appMode'
 
 const routes = [
   { path: '/', redirect: '/operador' },
@@ -10,19 +9,11 @@ const routes = [
   { path: '/historico', name: 'historico', component: () => import('../views/HistoryView.vue') },
   { path: '/custos', name: 'custos', component: () => import('../views/ItemCostsView.vue') },
   { path: '/conferencia-posicao', name: 'conferencia-posicao', component: () => import('../views/PositionCheckView.vue') },
-  { path: '/migracao', name: 'migracao', component: () => import('../views/MigrationView.vue'), meta: { catalystOnly: true } },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-})
-
-router.beforeEach((to) => {
-  // Hide migration route outside Catalyst mode
-  if (to.meta.catalystOnly && !isCatalystMode) {
-    return { name: 'operador' }
-  }
 })
 
 export default router
