@@ -1,7 +1,9 @@
 import express from 'express';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
+import { getPool, sql } from './db.js';
 import { authMiddleware } from './auth.js';
 import plansRouter from './routes/plans.js';
 import basesRouter from './routes/bases.js';
@@ -54,8 +56,25 @@ app.use((req, res) => {
 });
 
 if (config.nodeEnv !== 'test') {
-  app.listen(config.port, () => {
-    console.log(`Server running on port ${config.port} (${config.nodeEnv})`);
+  const start = async () => {
+    const schema = await readFile(path.resolve(__dirname, '..', 'schema', '001_init.sql'), 'utf8');
+    const pool = await getPool();
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    try {
+      await new sql.Request(transaction).batch(schema);
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback().catch(() => {});
+      throw error;
+    }
+    app.listen(config.port, () => {
+      console.log(`Server running on port ${config.port} (${config.nodeEnv})`);
+    });
+  };
+  start().catch(error => {
+    console.error('Database initialization failed:', error.message);
+    process.exitCode = 1;
   });
 }
 

@@ -51,7 +51,7 @@ BEGIN
     operator_name NVARCHAR(255)    NOT NULL DEFAULT '',
     created_at    DATETIME2        NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT pk_count_plans PRIMARY KEY (id),
-    CONSTRAINT fk_count_plans_base FOREIGN KEY (base_id) REFERENCES count_bases(id) ON DELETE CASCADE,
+    CONSTRAINT fk_count_plans_base FOREIGN KEY (base_id) REFERENCES count_bases(id),
     CONSTRAINT fk_count_plans_item FOREIGN KEY (item_id) REFERENCES count_items(id) ON DELETE SET NULL,
     CONSTRAINT ck_count_plans_status CHECK (status IN ('pending','completed'))
   );
@@ -76,7 +76,7 @@ BEGIN
     observation NVARCHAR(2000)   NULL,
     CONSTRAINT pk_count_results PRIMARY KEY (id),
     CONSTRAINT fk_count_results_plan FOREIGN KEY (plan_id) REFERENCES count_plans(id) ON DELETE CASCADE,
-    CONSTRAINT fk_count_results_item FOREIGN KEY (item_id) REFERENCES count_items(id) ON DELETE CASCADE,
+    CONSTRAINT fk_count_results_item FOREIGN KEY (item_id) REFERENCES count_items(id),
     CONSTRAINT uq_count_results_plan_item UNIQUE (plan_id, item_id),
     CONSTRAINT ck_count_results_adj CHECK (adjustment IS NULL OR adjustment IN ('OK','NOK'))
   );
