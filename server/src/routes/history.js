@@ -12,7 +12,7 @@ router.get('/', async (req, res, next) => {
       FROM count_history
       ORDER BY count_date DESC, source_line
     `);
-    res.json(rows);
+    res.json(rows.recordset);
   } catch (err) { next(err); }
 });
 
@@ -20,7 +20,7 @@ router.get('/', async (req, res, next) => {
 router.get('/last-dates', async (req, res, next) => {
   try {
     const rows = await query(`SELECT pn, MAX(count_date) AS count_date FROM count_history WHERE count_date IS NOT NULL GROUP BY pn`);
-    res.json(rows);
+    res.json(rows.recordset);
   } catch (err) { next(err); }
 });
 

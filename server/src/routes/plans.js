@@ -18,7 +18,7 @@ router.get('/plans', async (req, res, next) => {
         WHERE p.scheduled_date = @p0
         ORDER BY p.id
       `, [date]);
-      return res.json(groupPlans(rows));
+      return res.json(groupPlans(rows.recordset));
     }
     // GET /api/plans?year=YYYY&month=0-11 — plans in a given month (calendar view)
     const { year, month } = req.query;
@@ -34,7 +34,7 @@ router.get('/plans', async (req, res, next) => {
         WHERE p.scheduled_date >= @p0 AND p.scheduled_date <= @p1
         ORDER BY p.scheduled_date, p.id
       `, [first, last]);
-      return res.json(rows.map(r => ({
+      return res.json(rows.recordset.map(r => ({
         id: r.id, scheduled_date: r.scheduled_date, status: r.status,
         count_items: r.item_id ? { id: r.item_id, sku: r.sku, description: r.description, abc_class: r.abc_class } : null,
       })));
@@ -125,7 +125,7 @@ router.get('/plans/completed', async (req, res, next) => {
       WHERE p.status = 'completed'
       ORDER BY p.completed_at DESC, p.id
     `);
-    res.json(rows.map(r => ({
+    res.json(rows.recordset.map(r => ({
       id: r.id, scheduled_date: r.scheduled_date, completed_at: r.completed_at,
       operator_name: r.operator_name,
       count_items: { sku: r.sku, description: r.description, abc_class: r.abc_class },

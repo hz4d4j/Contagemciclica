@@ -16,7 +16,7 @@ router.get('/', async (req, res, next) => {
       ORDER BY pc.check_date DESC, pc.created_at DESC
       OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY
     `);
-    res.json(rows.map(r => ({
+    res.json(rows.recordset.map(r => ({
       id: r.id, count_item_id: r.count_item_id, check_date: r.check_date,
       operator_name: r.operator_name, locations_checked: r.locations_checked,
       locations_ok: r.locations_ok, locations_not_ok: r.locations_not_ok,

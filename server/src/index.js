@@ -23,7 +23,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 const apiAuth = authMiddleware();
 app.use('/api', apiAuth);
 
-app.use('/api/plans', plansRouter);
+app.use('/api', plansRouter);
 app.use('/api/bases', basesRouter);
 app.use('/api/history', historyRouter);
 app.use('/api/costs', costsRouter);

@@ -113,6 +113,9 @@ export const catalystApi = {
   async loadItemCosts() {
     return apiGet('/api/costs')
   },
+  async saveItemCosts(rows) {
+    return apiPost('/api/costs/bulk', { rows })
+  },
 
   // Position checks
   async savePositionCheck(check) {

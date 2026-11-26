@@ -7,7 +7,7 @@ const router = Router();
 router.get('/', async (req, res, next) => {
   try {
     const rows = await query(`SELECT id, name FROM count_bases ORDER BY name`);
-    res.json(rows);
+    res.json(rows.recordset);
   } catch (err) { next(err); }
 });
 
@@ -16,7 +16,7 @@ router.get('/:id/items', async (req, res, next) => {
   try {
     const rows = await query(`SELECT id, sku, description, abc_class FROM count_items WHERE base_id=@p0 ORDER BY sku`,
       [req.params.id]);
-    res.json(rows);
+    res.json(rows.recordset);
   } catch (err) { next(err); }
 });
 
@@ -24,7 +24,7 @@ router.get('/:id/items', async (req, res, next) => {
 router.get('/items', async (req, res, next) => {
   try {
     const rows = await query(`SELECT id, sku, description FROM count_items ORDER BY sku`);
-    res.json(rows);
+    res.json(rows.recordset);
   } catch (err) { next(err); }
 });
 
@@ -49,11 +49,11 @@ router.post('/import', async (req, res, next) => {
       for (const item of base.items) {
         const itemExists = await query(`SELECT id FROM count_items WHERE base_id=@p0 AND sku=@p1`, [baseId, item.sku]);
         if (itemExists.recordset.length) {
-          await query(`UPDATE count_items SET description=@p0, location=@p1, system_qty=@p2 WHERE base_id=@p3 AND sku=@p4`,
-            [item.description ?? '', item.location ?? '', item.system_qty ?? 0, baseId, item.sku]);
+          await query(`UPDATE count_items SET description=@p0, location=@p1, system_qty=COALESCE(@p2,system_qty), abc_class=COALESCE(@p5,abc_class) WHERE base_id=@p3 AND sku=@p4`,
+            [item.description ?? '', item.location ?? '', item.system_qty ?? null, baseId, item.sku, item.abc_class ?? null]);
         } else {
-          await query(`INSERT INTO count_items (base_id, sku, description, location, system_qty) VALUES (@p0,@p1,@p2,@p3,@p4)`,
-            [baseId, item.sku, item.description ?? '', item.location ?? '', item.system_qty ?? 0]);
+          await query(`INSERT INTO count_items (base_id, sku, description, location, system_qty, abc_class) VALUES (@p0,@p1,@p2,@p3,@p4,@p5)`,
+            [baseId, item.sku, item.description ?? '', item.location ?? '', item.system_qty ?? 0, item.abc_class ?? null]);
         }
         itemCount++;
       }

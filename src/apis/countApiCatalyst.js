@@ -52,7 +52,8 @@ export async function loadHistoryRows() {
 }
 
 export async function saveHistoryRows(rows) {
-  return catalystApi.saveHistoryRows(rows)
+  const result = await catalystApi.saveHistoryRows(rows)
+  return result.count
 }
 
 export async function loadLastHistoryCountDates() {
@@ -61,6 +62,11 @@ export async function loadLastHistoryCountDates() {
 
 export async function loadItemCosts() {
   return catalystApi.loadItemCosts()
+}
+
+export async function saveItemCosts(rows) {
+  const result = await catalystApi.saveItemCosts(rows)
+  return result.count
 }
 
 export async function loadCompletedResults() {

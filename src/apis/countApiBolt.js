@@ -50,7 +50,18 @@ export async function saveImportedBases(parsedBases) {
     ensureOk(error)
 
     for (const part of chunk(base.items, WRITE_CHUNK)) {
-      const rows = part.map((item) => ({ ...item, base_id: baseRow.id }))
+      const metadataOnly = part.filter((item) => item.system_qty === undefined)
+      for (const item of metadataOnly) {
+        const { data: existing, error: readError } = await supabase.from('count_items').select('id').eq('base_id', baseRow.id).eq('sku', item.sku).maybeSingle()
+        ensureOk(readError)
+        const fields = { description: item.description, location: item.location, ...(item.abc_class ? { abc_class: item.abc_class } : {}) }
+        const result = existing
+          ? await supabase.from('count_items').update(fields).eq('id', existing.id)
+          : await supabase.from('count_items').insert({ ...fields, sku: item.sku, base_id: baseRow.id })
+        ensureOk(result.error)
+      }
+      const rows = part.filter((item) => item.system_qty !== undefined).map((item) => ({ ...item, base_id: baseRow.id }))
+      if (!rows.length) continue
       const { error: itemsError } = await supabase
         .from('count_items')
         .upsert(rows, { onConflict: 'base_id,sku' })
@@ -244,6 +255,14 @@ export async function loadItemCosts() {
       .range(from, to),
   )
   return rows.map((row) => ({ ...row, unitCostUsd: Number(row.unit_cost_usd) }))
+}
+
+export async function saveItemCosts(rows) {
+  for (const part of chunk(rows, WRITE_CHUNK)) {
+    const { error } = await supabase.from('item_costs').upsert(part, { onConflict: 'pn' })
+    ensureOk(error)
+  }
+  return rows.length
 }
 
 export async function loadCompletedResults() {
